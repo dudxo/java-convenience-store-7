@@ -6,7 +6,7 @@ public enum PromotionType {
 
     NO_PROMOTION(false, ""),
     CARBONATED_DRINK_BYE_TWO_GET_ONE(true, "탄산2+1"),
-    RECOMMENDED_PRODUCT(true, "md추천상품"),
+    RECOMMENDED_PRODUCT(true, "MD추천상품"),
     FLASH_DISCOUNT(true, "반짝할인");
 
 
@@ -26,6 +26,11 @@ public enum PromotionType {
     }
 
     private boolean isEqual(String promotionDetail) {
-        return promotionDetail == this.promotionDetail;
+        return promotionDetail.equals(this.promotionDetail);
+    }
+
+    @Override
+    public String toString() {
+        return this.promotionDetail;
     }
 }
