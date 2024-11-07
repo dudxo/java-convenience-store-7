@@ -10,11 +10,11 @@ public class Product {
     public Product(String name, int price, String promotion, int quantity) {
         this.name = name;
         this.price = price;
-        this.promotion = of(promotion);
+        this.promotion = convertToPromotionType(promotion);
         this.quantity = quantity;
     }
 
-    private static PromotionType of(String promotion) {
+    private PromotionType convertToPromotionType(String promotion) {
         return PromotionType.of(promotion);
     }
 
