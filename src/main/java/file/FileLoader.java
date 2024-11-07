@@ -6,7 +6,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,40 +23,36 @@ public class FileLoader {
     }
 
     private static <T> List<T> loadFromFile(String filePath, LineParser<T> parser) {
-        List<T> items = new ArrayList<>();
+        List<T> entities = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(getInputStreamReader(filePath))) {
-            String line;
-            boolean isFirstLine = true;
-            while ((line = reader.readLine()) != null) {
-                if (isFirstLine) {
-                    isFirstLine = false;
-                    continue;
-                }
-                items.add(parser.parse(line));
-            }
+            getEntitiesForLine(parser, reader, entities);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return items;
+        return entities;
+    }
+
+    private static <T> void getEntitiesForLine(LineParser<T> parser, BufferedReader reader, List<T> entities)
+            throws IOException {
+        String line;
+        boolean isFirstLine = true;
+        while ((line = reader.readLine()) != null) {
+            if (isFirstLine) {
+                isFirstLine = false;
+                continue;
+            }
+            entities.add(parser.parse(line));
+        }
     }
 
     private static Item parseProductData(String line) {
-        String[] values = line.split(",", 0);
-        String name = values[0].trim();
-        int price = Integer.parseInt(values[1].trim());
-        int quantity = Integer.parseInt(values[2].trim());
-        String promotion = values[3].trim();
-        return new Item(name, price, promotion, quantity);
+        String[] datas = line.split(",", 0);
+        return Convertor.convertToItemFromData(datas);
     }
 
     private static Promotion parsePromotionData(String line) {
-        String[] values = line.split(",", 0);
-        String promotion = values[0].trim();
-        int purchaseAmount = Integer.parseInt(values[1].trim());
-        int giftAmount = Integer.parseInt(values[2].trim());
-        LocalDate startDate = LocalDate.parse(values[3].trim());
-        LocalDate endDate = LocalDate.parse(values[4].trim());
-        return new Promotion(promotion, purchaseAmount, giftAmount, startDate, endDate);
+        String[] datas = line.split(",", 0);
+        return Convertor.convertToPromotionFromData(datas);
     }
 
     private static InputStreamReader getInputStreamReader(String path) {
