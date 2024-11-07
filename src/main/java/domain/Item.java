@@ -1,13 +1,13 @@
 package domain;
 
-public class Product {
+public class Item {
 
     private final String name;
     private final int price;
     private final PromotionType promotion;
     private int quantity;
 
-    public Product(String name, int price, String promotion, int quantity) {
+    public Item(String name, int price, String promotion, int quantity) {
         this.name = name;
         this.price = price;
         this.promotion = convertToPromotionType(promotion);

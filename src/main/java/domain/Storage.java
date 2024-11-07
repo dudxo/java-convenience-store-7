@@ -4,9 +4,9 @@ import java.util.List;
 
 public class Storage {
 
-    private final List<Product> products;
+    private final List<Item> items;
 
-    public Storage(List<Product> products) {
-        this.products = products;
+    public Storage(List<Item> items) {
+        this.items = items;
     }
 }
