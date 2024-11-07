@@ -10,12 +10,15 @@ public class Promotion {
     private final LocalDate startDate;
     private final LocalDate endDate;
 
-    public Promotion(PromotionType promotionType, int purchaseAmount, int giftAmount, LocalDate startDate,
-                     LocalDate endDate) {
-        this.promotionType = promotionType;
+    public Promotion(String promotion, int purchaseAmount, int giftAmount, LocalDate startDate, LocalDate endDate) {
+        this.promotionType = convertToPromotionType(promotion);
         this.purchaseAmount = purchaseAmount;
         this.giftAmount = giftAmount;
         this.startDate = startDate;
         this.endDate = endDate;
+    }
+
+    private PromotionType convertToPromotionType(String promotion) {
+        return PromotionType.of(promotion);
     }
 }
