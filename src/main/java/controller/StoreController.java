@@ -270,9 +270,10 @@ public class StoreController {
 
     private void adjustForLowQuantity(CartItem cartItem, int lowQuantity, Promotion promotion, Item promotionItem) {
         int giftQuantity = promotion.calculateGiftQuantity(cartItem.calculateAvailableQuantity(lowQuantity));
+        Validate.validateEnoughStock(storage, cartItem.getName(), cartItem.getQuantity());
         cartItem.cancelItemQuantity(lowQuantity);
         orderItems.add(createOrderItem(cartItem, promotionItem, giftQuantity));
-        writeStockChange(itemStockChanges, promotionItem, cartItem.calculateAvailableQuantity(lowQuantity));
+        writeStockChange(itemStockChanges, promotionItem, cartItem.getQuantity());
     }
 
     private void writeStockChange(Map<Item, Integer> itemStockChanges, Item item, int DeductedQuantity) {
