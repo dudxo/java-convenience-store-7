@@ -1,22 +1,33 @@
 package domain;
 
-public class RegularItem {
+public class Item {
 
     private final String name;
     private final int price;
+    private final PromotionType promotion;
     private int quantity;
 
-    public RegularItem(String name, int price, int quantity) {
+    public Item(String name, int price, String promotion, int quantity) {
         this.name = name;
         this.price = price;
+        this.promotion = convertToPromotionType(promotion);
         this.quantity = quantity;
+    }
+
+    private PromotionType convertToPromotionType(String promotion) {
+        return PromotionType.of(promotion);
+    }
+
+    public PromotionType getPromotion() {
+        return promotion;
     }
 
     @Override
     public String toString() {
         return this.name + " "
                 + formatPrice()
-                + formatQuantity();
+                + formatQuantity()
+                + this.promotion.toString();
     }
 
     private String formatPrice() {
@@ -24,7 +35,7 @@ public class RegularItem {
     }
 
     private String formatQuantity() {
-        final String ZERO_QUANTITY = "재고 없음";
+        final String ZERO_QUANTITY = "재고 없음 ";
         if (this.quantity == 0) {
             return ZERO_QUANTITY;
         }
@@ -40,10 +51,40 @@ public class RegularItem {
     }
 
     public boolean isPromotionItem() {
-        return this.promotion.isPromotion();
+        return this.promotion != PromotionType.NO_PROMOTION;
     }
 
     public int getQuantity() {
         return quantity;
     }
+
+    public String getPromotionDetail() {
+        return promotion.getPromotionDetail();
+    }
+
+    public boolean isEnoughQuantity(int requiredQuantity) {
+        return this.quantity >= requiredQuantity;
+    }
+
+    public int lowQuantity(int requiredQuantity) {
+        return requiredQuantity - this.quantity;
+    }
+
+    public int availableQuantity(int promotionQuantity) {
+        int totalSet = this.quantity / promotionQuantity;
+        return totalSet * promotionQuantity;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getPrice() {
+        return price;
+    }
+
+    public void updateQuantity(int orderQuantity) {
+        this.quantity = this.quantity - orderQuantity;
+    }
+
 }
