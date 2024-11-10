@@ -70,4 +70,9 @@ public class Item {
     public void updateQuantity(int orderQuantity) {
         this.quantity = this.quantity - orderQuantity;
     }
+
+    public int availableQuantity(int promotionQuantity) {
+        int totalSet = this.quantity / promotionQuantity;
+        return totalSet * promotionQuantity;
+    }
 }
