@@ -11,7 +11,9 @@ import domain.Promotions;
 import domain.Storage;
 import file.FileLoader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import util.DependencyFactory;
 import valid.Task;
 import valid.Validate;
@@ -42,8 +44,6 @@ public class StoreController {
 
     private Order playStore() {
         return Task.reTryTaskUntilSuccessful(() -> {
-            List<Item> items = storage.getItems();
-            this.storage = new Storage(items);
             Cart cart = getCart();
             Order order = initOrder(cart);
             return order;
@@ -68,7 +68,7 @@ public class StoreController {
 
 
     public Cart getCart() {
-        List<CartItem> cartItems = Task.reTryTaskUntilSuccessful(() -> getCartItem());
+        List<CartItem> cartItems = getCartItem();
         return new Cart(cartItems);
     }
 
@@ -88,9 +88,19 @@ public class StoreController {
         return new CartItem(itemName, itemQuantity);
     }
 
+    private void updateStock(Map<Item, Integer> itemStockChanges) {
+        for (Map.Entry<Item, Integer> entry : itemStockChanges.entrySet()) {
+            Item item = entry.getKey();
+            int quantityToDeduct = entry.getValue();
+            item.updateQuantity(quantityToDeduct); // 재고 차감
+        }
+    }
+
     public Order initOrder(Cart cart) {
         List<OrderItem> orderItems = new ArrayList<>();
         int membershipDiscount = 0;
+
+        Map<Item, Integer> itemStockChanges = new HashMap<>();
 
         for (CartItem cartItem : cart.getCartItems()) {
             Item promotionItem = storage.findPromotionItem(cartItem.getName());
@@ -101,7 +111,7 @@ public class StoreController {
                 Promotion promotion = promotions.getPromotion(promotionDetail);
                 //오늘 프로모션 날짜인지
                 if (promotion.isCurrentPromotion(DateTimes.now())) {
-                    promotion(cartItem, promotionItem, generalItem, promotions, orderItems);
+                    promotion(cartItem, promotionItem, generalItem, promotions, orderItems, itemStockChanges);
                     continue;
                 }
             }
@@ -109,8 +119,10 @@ public class StoreController {
             // TODO : 일반 상품 재고량 구매 수량과 비교
             Validate.validateEnoughStock(storage, cartItem);
             orderItems.add(new OrderItem(cartItem.getName(), cartItem.getQuantity(), 0, generalItem.getPrice()));
-            generalItem.updateQuantity(cartItem.getQuantity());
+            itemStockChanges.put(generalItem, itemStockChanges.getOrDefault(generalItem, 0) + cartItem.getQuantity());
         }
+
+        updateStock(itemStockChanges);
 
         outputView.printMembership();
         String answer = Task.reTryTaskUntilSuccessful(() -> inputAnswer());
@@ -141,7 +153,7 @@ public class StoreController {
     }
 
     private void promotion(CartItem cartItem, Item promotionItem, Item generalItem, Promotions promotions,
-                           List<OrderItem> orderItems) {
+                           List<OrderItem> orderItems, Map<Item, Integer> itemStockChanges) {
         if (promotionItem != null) {
             String promotionDetail = promotionItem.getPromotionDetail();
             Promotion promotion = promotions.getPromotion(promotionDetail);
@@ -159,14 +171,16 @@ public class StoreController {
 
                 // 부족한 수량을 일반 재고로 계산
                 if (Validate.isYesAnswer(answer)) {
-                    Validate.validateEnoughStock(storage, cartItem);
+                    Validate.validateEnoughStock(storage, cartItem.getName(), lowQuantity);
                     int giftQuantity = promotion.calculateGiftQuantity(
                             cartItem.calculateAvailableQuantity(lowQuantity));
                     orderItems.add(new OrderItem(cartItem.getName(), cartItem.getQuantity(), giftQuantity,
                             promotionItem.getPrice()));
                     // TODO : 일반 상품 재고량 구매 수량과 비교
-                    generalItem.updateQuantity(lowQuantity);
-                    promotionItem.updateQuantity(cartItem.calculateAvailableQuantity(lowQuantity));
+                    itemStockChanges.put(generalItem, itemStockChanges.getOrDefault(generalItem, 0) + lowQuantity);
+                    itemStockChanges.put(promotionItem,
+                            itemStockChanges.getOrDefault(promotionItem, 0) + cartItem.calculateAvailableQuantity(
+                                    lowQuantity));
                 }
 
                 // 부족한 수량을 제외한다.(10-4 = 6)
@@ -176,14 +190,16 @@ public class StoreController {
                     cartItem.cancelItemQuantity(lowQuantity);
                     orderItems.add(new OrderItem(cartItem.getName(), cartItem.getQuantity(), giftQuantity,
                             promotionItem.getPrice()));
-                    promotionItem.updateQuantity(cartItem.calculateAvailableQuantity(lowQuantity));
+                    itemStockChanges.put(promotionItem,
+                            itemStockChanges.getOrDefault(promotionItem, 0) + cartItem.calculateAvailableQuantity(
+                                    lowQuantity));
                 }
                 return;
             }
             // 프로모션 재고량이 충분한 경우
 
             // 프로모션 적용이 가능한데 해당 수량보다 적게 사는 경우
-            if (!promotion.isMeetPromotionCondition(cartItem.getQuantity())) {
+            if (promotion.isPromotionCondition(cartItem.getQuantity())) {
                 outputView.printAdditionalGiftQuantity(cartItem.getName(), promotion.getGiftAmount());
                 String answer = inputAnswer();
                 if (Validate.isYesAnswer(answer)) {
@@ -194,7 +210,9 @@ public class StoreController {
             int giftQuantity = promotion.calculateGiftQuantity(cartItem.getQuantity());
             orderItems.add(
                     new OrderItem(cartItem.getName(), cartItem.getQuantity(), giftQuantity, promotionItem.getPrice()));
-            promotionItem.updateQuantity(cartItem.getQuantity());
+            itemStockChanges.put(promotionItem,
+                    itemStockChanges.getOrDefault(promotionItem, 0) + cartItem.getQuantity());
+
         }
     }
 
