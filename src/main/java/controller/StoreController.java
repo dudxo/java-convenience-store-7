@@ -315,7 +315,7 @@ public class StoreController {
     }
 
     public void printReceipt(Order order) {
-        int maxItemNameLength = order.getMaxItemNameLength();
+        int maxItemNameLength = storage.getMaxItemNameLength();
         printReceiptHeader(maxItemNameLength);
         printPurchaseItems(order, maxItemNameLength);
 

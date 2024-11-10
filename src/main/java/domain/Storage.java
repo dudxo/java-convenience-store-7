@@ -56,4 +56,11 @@ public class Storage {
                 .filter(item -> !item.isPromotionItem())
                 .anyMatch(item -> item.isEnoughQuantity(requiredQuantity));
     }
+
+    public int getMaxItemNameLength() {
+        return items.stream()
+                .mapToInt(item -> item.getName().length())
+                .max()
+                .orElse(1);
+    }
 }
