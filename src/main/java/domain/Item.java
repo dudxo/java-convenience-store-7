@@ -40,10 +40,7 @@ public class Item {
     }
 
     public boolean containsName(String name) {
-        if (this.name.equals(name)) {
-            return true;
-        }
-        return false;
+        return this.name.equals(name);
     }
 
     public boolean isPromotionItem() {

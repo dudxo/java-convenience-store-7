@@ -24,11 +24,7 @@ public class Promotion {
     }
 
     public boolean contains(String promotionDetail) {
-        if (this.promotionType.getPromotionDetail().equals(promotionDetail)) {
-            return true;
-        }
-
-        return false;
+        return this.promotionType.getPromotionDetail().equals(promotionDetail);
     }
 
     public int getGiftAmount() {
