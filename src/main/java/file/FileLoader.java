@@ -12,7 +12,7 @@ import java.util.List;
 public class FileLoader {
 
     private static final String ITEMS_FILE_PATH = "products.md";
-    private static final String PROMOTIONS_FILE_PATH = "products.md";
+    private static final String PROMOTIONS_FILE_PATH = "promotions.md";
 
     public static List<Item> loadProductsFromFile() {
         return loadFromFile(ITEMS_FILE_PATH, FileLoader::parseProductData);
