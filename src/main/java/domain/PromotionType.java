@@ -9,7 +9,6 @@ public enum PromotionType {
     RECOMMENDED_PRODUCT(true, "MD추천상품"),
     FLASH_DISCOUNT(true, "반짝할인");
 
-
     private final boolean isPromotion;
     private final String promotionDetail;
 
@@ -32,10 +31,6 @@ public enum PromotionType {
     @Override
     public String toString() {
         return this.promotionDetail;
-    }
-
-    public boolean isPromotion() {
-        return isPromotion;
     }
 
     public String getPromotionDetail() {

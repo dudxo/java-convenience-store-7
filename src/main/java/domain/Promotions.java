@@ -9,10 +9,6 @@ public class Promotions {
         this.promotions = promotions;
     }
 
-    public List<Promotion> getPromotions() {
-        return List.copyOf(promotions);
-    }
-
     public Promotion getPromotion(String promotionDetail) {
         return promotions.stream()
                 .filter(promotion -> promotion.contains(promotionDetail))

@@ -18,10 +18,6 @@ public class Item {
         return PromotionType.of(promotion);
     }
 
-    public PromotionType getPromotion() {
-        return promotion;
-    }
-
     @Override
     public String toString() {
         return this.name + " "
@@ -66,15 +62,6 @@ public class Item {
         return this.quantity >= requiredQuantity;
     }
 
-    public int lowQuantity(int requiredQuantity) {
-        return requiredQuantity - this.quantity;
-    }
-
-    public int availableQuantity(int promotionQuantity) {
-        int totalSet = this.quantity / promotionQuantity;
-        return totalSet * promotionQuantity;
-    }
-
     public String getName() {
         return name;
     }
@@ -86,5 +73,4 @@ public class Item {
     public void updateQuantity(int orderQuantity) {
         this.quantity = this.quantity - orderQuantity;
     }
-
 }

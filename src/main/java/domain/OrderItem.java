@@ -26,17 +26,8 @@ public class OrderItem {
         return promotionGiftQuantity;
     }
 
-    public int getPrice() {
-        return price;
-    }
-
     public boolean isPromotionGiftQuantity() {
         return this.promotionGiftQuantity > 0;
-    }
-
-
-    public int calculateTotalPromotionQuantity(Promotion promotion) {
-        return 0;
     }
 
     // 총 구매수량에서 일반 재고 구매 수량을 계산한다.
@@ -60,5 +51,4 @@ public class OrderItem {
     public int getTotalPromotionGiftPrice() {
         return this.promotionGiftQuantity * this.price;
     }
-
 }
