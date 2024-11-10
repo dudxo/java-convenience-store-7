@@ -30,12 +30,8 @@ public class OrderItem {
         return price;
     }
 
-    public boolean getPromotionGiftQuantity() {
-        if (this.promotionGiftQuantity > 0) {
-            return true;
-        }
-
-        return false;
+    public boolean isPromotionGiftQuantity() {
+        return this.promotionGiftQuantity > 0;
     }
 
 
@@ -51,6 +47,10 @@ public class OrderItem {
         int totalPromotionQuantity = promotion.getTotalPromotionQuantity() * totalSet;
 
         return this.purchaseQuantity - totalPromotionQuantity;
+    }
+
+    public int calculateTotalGeneralPrice(Promotion promotion) {
+        return getGeneralQuantity(promotion) * this.price;
     }
 
     public int getTotalPrice() {
