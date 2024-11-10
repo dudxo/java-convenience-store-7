@@ -50,4 +50,11 @@ public class Order {
     public int getActualTotalPrice() {
         return getTotalOrderPrice() - getTotalOrderPromotionDiscount() - this.membershipDisCount;
     }
+
+    public int getMaxItemNameLength() {
+        return orderItems.stream()
+                .mapToInt(item -> item.getName().length())
+                .max()
+                .orElse(1);
+    }
 }
