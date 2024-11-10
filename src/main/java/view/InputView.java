@@ -8,12 +8,16 @@ public class InputView {
         return getInput(ViewMessage.INPUT_PURCHASE_ITEMS_MSG.getMessage());
     }
 
-    private String getInput(String message) {
-        System.out.printf(message);
+    public String inputAnswer() {
         return Console.readLine().trim();
     }
 
-    public String inputAnswer() {
+    public String inputAdditionalPurchase() {
+        return getInput(ViewMessage.INPUT_ADDITION_PURCHASE_MSG.getMessage());
+    }
+
+    private String getInput(String message) {
+        System.out.printf(message);
         return Console.readLine().trim();
     }
 }
