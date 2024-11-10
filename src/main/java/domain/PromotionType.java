@@ -33,4 +33,12 @@ public enum PromotionType {
     public String toString() {
         return this.promotionDetail;
     }
+
+    public boolean isPromotion() {
+        return isPromotion;
+    }
+
+    public String getPromotionDetail() {
+        return promotionDetail;
+    }
 }
