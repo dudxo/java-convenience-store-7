@@ -30,4 +30,7 @@ public class CartItem {
         this.quantity = this.quantity + giftQuantity;
     }
 
+    public int calculateLowQuantity(int availableQuantity) {
+        return this.getQuantity() - availableQuantity;
+    }
 }
