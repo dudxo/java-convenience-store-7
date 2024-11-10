@@ -41,7 +41,7 @@ public class Order {
     public int getTotalOrderPromotionDiscount() {
         int totalOrderPromotionDiscount = 0;
         for (OrderItem orderItem : orderItems) {
-            totalOrderPromotionDiscount += orderItem.getTotalPromotionPrice();
+            totalOrderPromotionDiscount += orderItem.getTotalPromotionGiftPrice();
         }
 
         return totalOrderPromotionDiscount;

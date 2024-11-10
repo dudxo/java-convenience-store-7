@@ -4,13 +4,13 @@ public class OrderItem {
 
     private String name;
     private int purchaseQuantity;
-    private int promotionQuantity;
+    private int promotionGiftQuantity;
     private int price;
 
     public OrderItem(String item, int purchaseQuantity, int promotionQuantity, int price) {
         this.name = item;
         this.purchaseQuantity = purchaseQuantity;
-        this.promotionQuantity = promotionQuantity;
+        this.promotionGiftQuantity = promotionQuantity;
         this.price = price;
     }
 
@@ -23,15 +23,15 @@ public class OrderItem {
     }
 
     public int getPromotionQuantity() {
-        return promotionQuantity;
+        return promotionGiftQuantity;
     }
 
     public int getPrice() {
         return price;
     }
 
-    public boolean isPromotionQuantity() {
-        if (this.promotionQuantity > 0) {
+    public boolean getPromotionGiftQuantity() {
+        if (this.promotionGiftQuantity > 0) {
             return true;
         }
 
@@ -43,11 +43,11 @@ public class OrderItem {
         return 0;
     }
 
-    // 총 구매수량에서 프로모션 포함 수량 계산
+    // 총 구매수량에서 일반 재고 구매 수량을 계산한다.
     public int getGeneralQuantity(Promotion promotion) {
         int giftAmount = promotion.getGiftAmount();
 
-        int totalSet = this.promotionQuantity / giftAmount;
+        int totalSet = this.promotionGiftQuantity / giftAmount;
         int totalPromotionQuantity = promotion.getTotalPromotionQuantity() * totalSet;
 
         return this.purchaseQuantity - totalPromotionQuantity;
@@ -57,8 +57,8 @@ public class OrderItem {
         return this.purchaseQuantity * this.price;
     }
 
-    public int getTotalPromotionPrice() {
-        return this.promotionQuantity * this.price;
+    public int getTotalPromotionGiftPrice() {
+        return this.promotionGiftQuantity * this.price;
     }
 
 }
