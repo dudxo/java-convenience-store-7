@@ -41,13 +41,29 @@ public class StoreController {
     }
 
     public void run() {
+        initStore();
+
+        while (true) {
+            printStartMessage();
+            Order order = playStore();
+            printReceipt(order);
+            if (Validate.isNoAnswer(inputAdditionalPurchase())) {
+                break;
+            }
+        }
+    }
+
+    private String inputAdditionalPurchase() {
+        return Task.reTryTaskUntilSuccessful(() -> {
+            String answer = inputView.inputAdditionalPurchase();
+            Validate.validateAnswer(answer);
+            return answer;
+        });
+    }
+
+    private void initStore() {
         this.storage = initStorage();
         this.promotions = initPromotions();
-        printStartMessage();
-
-        Order order = playStore();
-        printReceipt(order);
-        outputView.printStorage(storage);
     }
 
     private Order playStore() {
