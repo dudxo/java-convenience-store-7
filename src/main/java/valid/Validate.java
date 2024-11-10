@@ -50,4 +50,11 @@ public class Validate {
         }
         throw new IllegalArgumentException(ErrorMessage.EXCEED_STOCK_MSG.getMessage());
     }
+
+    public static void validateEnoughStock(Storage storage, String name, int quantity) {
+        if (storage.isEnoughQuantity(name, quantity)) {
+            return;
+        }
+        throw new IllegalArgumentException(ErrorMessage.EXCEED_STOCK_MSG.getMessage());
+    }
 }
