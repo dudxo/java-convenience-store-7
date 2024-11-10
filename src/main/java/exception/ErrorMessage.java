@@ -9,7 +9,7 @@ public enum ErrorMessage {
 
 
     private static final String PREFIX_ERROR_MSG = "[ERROR] ";
-    private static final String SUFFIX_ERROR_MSG = " 다시 입력해주세요.";
+    private static final String SUFFIX_ERROR_MSG = " 다시 입력해 주세요.";
 
     private final String message;
 
