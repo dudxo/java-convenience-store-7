@@ -285,8 +285,8 @@ public class StoreController {
         Item generalItem = storage.findGeneralItem(cartItem.getName());
         int giftQuantity = promotion.calculateGiftQuantity(cartItem.calculateAvailableQuantity(lowQuantity));
         orderItems.add(createOrderItem(cartItem, promotionItem, giftQuantity));
-        writeStockChange(itemStockChanges, generalItem, lowQuantity);
-        writeStockChange(itemStockChanges, promotionItem, cartItem.calculateAvailableQuantity(lowQuantity));
+        writeStockChange(itemStockChanges, promotionItem, promotionItem.getQuantity());
+        writeStockChange(itemStockChanges, generalItem, cartItem.getQuantity() - promotionItem.getQuantity());
     }
 
     private OrderItem createOrderItem(CartItem cartItem, Item promotionItem, int giftQuantity) {
