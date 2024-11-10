@@ -84,7 +84,7 @@ public class Promotion {
         return !today.isBefore(startDate) && !today.isAfter(endDate);
     }
 
-    public boolean isMeetPromotionCondition(int requestedQuantity) {
+    public boolean isPromotionCondition(int requestedQuantity) {
         if (isBuyPromotionQuantity(requestedQuantity) && isTotalQuantity(requestedQuantity)) {
             return true;
         }
@@ -93,10 +93,10 @@ public class Promotion {
     }
 
     private boolean isBuyPromotionQuantity(int requestedQuantity) {
-        return this.purchaseAmount < requestedQuantity;
+        return this.purchaseAmount == requestedQuantity;
     }
 
     private boolean isTotalQuantity(int requestedQuantity) {
-        return requestedQuantity >= getTotalPromotionQuantity();
+        return requestedQuantity < getTotalPromotionQuantity();
     }
 }
