@@ -1,5 +1,9 @@
 package controller;
 
+import static view.Tag.ITEM_NAME;
+import static view.Tag.ITEM_PRICE;
+import static view.Tag.ITEM_QUANTITY;
+
 import camp.nextstep.edu.missionutils.DateTimes;
 import domain.Cart;
 import domain.CartItem;
@@ -26,6 +30,10 @@ public class StoreController {
     private final OutputView outputView;
     private Storage storage;
     private Promotions promotions;
+    private Map<Item, Integer> itemStockChanges;
+
+    private List<OrderItem> orderItems;
+
 
     public StoreController(DependencyFactory factory) {
         this.inputView = factory.getInputView();
@@ -97,123 +105,182 @@ public class StoreController {
     }
 
     public Order initOrder(Cart cart) {
-        List<OrderItem> orderItems = new ArrayList<>();
-        int membershipDiscount = 0;
-
-        Map<Item, Integer> itemStockChanges = new HashMap<>();
-
-        for (CartItem cartItem : cart.getCartItems()) {
-            Item promotionItem = storage.findPromotionItem(cartItem.getName());
-            Item generalItem = storage.findGeneralItem(cartItem.getName());
-            // 프로모션 상품이라면
-            if (storage.isPromotion(cartItem.getName())) {
-                String promotionDetail = promotionItem.getPromotionDetail();
-                Promotion promotion = promotions.getPromotion(promotionDetail);
-                //오늘 프로모션 날짜인지
-                if (promotion.isCurrentPromotion(DateTimes.now())) {
-                    promotion(cartItem, promotionItem, generalItem, promotions, orderItems, itemStockChanges);
-                    continue;
-                }
-            }
-            // 프로모션이 아닐때
-            // TODO : 일반 상품 재고량 구매 수량과 비교
-            Validate.validateEnoughStock(storage, cartItem);
-            orderItems.add(new OrderItem(cartItem.getName(), cartItem.getQuantity(), 0, generalItem.getPrice()));
-            itemStockChanges.put(generalItem, itemStockChanges.getOrDefault(generalItem, 0) + cartItem.getQuantity());
-        }
-
-        updateStock(itemStockChanges);
-
-        outputView.printMembership();
-        String answer = Task.reTryTaskUntilSuccessful(() -> inputAnswer());
-        if (Validate.isYesAnswer(answer)) {
-            int totalGeneralPriceSum = 0;
-            for (OrderItem orderItem : orderItems) {
-                if (orderItem.getPromotionGiftQuantity()) {
-                    Item promotionItem = storage.findPromotionItem(orderItem.getName());
-                    String promotionDetail = promotionItem.getPromotionDetail();
-                    Promotion promotion = promotions.getPromotion(promotionDetail);
-                    int generalQuantity = orderItem.getGeneralQuantity(promotion);
-                    totalGeneralPriceSum += generalQuantity * orderItem.getPrice();
-                    continue;
-                }
-                totalGeneralPriceSum += orderItem.getTotalPrice();
-            }
-            membershipDiscount = (int) (totalGeneralPriceSum * 0.3);
-            if (membershipDiscount > 8000) {
-                membershipDiscount = 8000;
-            }
-        }
-
-        if (Validate.isNoAnswer(answer)) {
-            membershipDiscount = 0;
-        }
-
+        initOrderItems(cart);
+        int membershipDiscount = calculateMembershipDiscount();
         return new Order(orderItems, membershipDiscount);
     }
 
-    private void promotion(CartItem cartItem, Item promotionItem, Item generalItem, Promotions promotions,
-                           List<OrderItem> orderItems, Map<Item, Integer> itemStockChanges) {
-        if (promotionItem != null) {
-            String promotionDetail = promotionItem.getPromotionDetail();
-            Promotion promotion = promotions.getPromotion(promotionDetail);
-            int availableQuantity = promotionItem.availableQuantity(promotion.getTotalPromotionQuantity());
-
-            // 구매 수량보다 프로모션 재고량이 부족한 경우
-            if (availableQuantity < cartItem.getQuantity()) {
-                // 부족한 재고는 일반 재고로 계산한다.
-                // 프로모션 가능한 개수
-
-                // 부족한 수량 = 장바구니 - 계산된 프로모션 가용가능한 재고량(7개가 있어도 2+1 행사라면 6개만 가용 가능)
-                int lowQuantity = cartItem.getQuantity() - availableQuantity;  // ex) 10 - 6 = 4
-                outputView.printNotPromotionDiscount(cartItem.getName(), lowQuantity);
-                String answer = inputAnswer();
-
-                // 부족한 수량을 일반 재고로 계산
-                if (Validate.isYesAnswer(answer)) {
-                    Validate.validateEnoughStock(storage, cartItem.getName(), lowQuantity);
-                    int giftQuantity = promotion.calculateGiftQuantity(
-                            cartItem.calculateAvailableQuantity(lowQuantity));
-                    orderItems.add(new OrderItem(cartItem.getName(), cartItem.getQuantity(), giftQuantity,
-                            promotionItem.getPrice()));
-                    // TODO : 일반 상품 재고량 구매 수량과 비교
-                    itemStockChanges.put(generalItem, itemStockChanges.getOrDefault(generalItem, 0) + lowQuantity);
-                    itemStockChanges.put(promotionItem,
-                            itemStockChanges.getOrDefault(promotionItem, 0) + cartItem.calculateAvailableQuantity(
-                                    lowQuantity));
-                }
-
-                // 부족한 수량을 제외한다.(10-4 = 6)
-                if (Validate.isNoAnswer(answer)) {
-                    int giftQuantity = promotion.calculateGiftQuantity(
-                            cartItem.calculateAvailableQuantity(lowQuantity));
-                    cartItem.cancelItemQuantity(lowQuantity);
-                    orderItems.add(new OrderItem(cartItem.getName(), cartItem.getQuantity(), giftQuantity,
-                            promotionItem.getPrice()));
-                    itemStockChanges.put(promotionItem,
-                            itemStockChanges.getOrDefault(promotionItem, 0) + cartItem.calculateAvailableQuantity(
-                                    lowQuantity));
-                }
-                return;
-            }
-            // 프로모션 재고량이 충분한 경우
-
-            // 프로모션 적용이 가능한데 해당 수량보다 적게 사는 경우
-            if (promotion.isPromotionCondition(cartItem.getQuantity())) {
-                outputView.printAdditionalGiftQuantity(cartItem.getName(), promotion.getGiftAmount());
-                String answer = inputAnswer();
-                if (Validate.isYesAnswer(answer)) {
-                    cartItem.addGiftQuantity(promotion.getGiftAmount());
-                }
-            }
-
-            int giftQuantity = promotion.calculateGiftQuantity(cartItem.getQuantity());
-            orderItems.add(
-                    new OrderItem(cartItem.getName(), cartItem.getQuantity(), giftQuantity, promotionItem.getPrice()));
-            itemStockChanges.put(promotionItem,
-                    itemStockChanges.getOrDefault(promotionItem, 0) + cartItem.getQuantity());
-
+    private int calculateMembershipDiscount() {
+        int totalGeneralPriceSum = 0;
+        if (Validate.isNoAnswer(requestNtMembershipDiscount())) {
+            return totalGeneralPriceSum;
         }
+
+        totalGeneralPriceSum = calculateTotalGeneralPriceSum(totalGeneralPriceSum);
+        return calculateTotalMembershipDiscount(totalGeneralPriceSum);
+    }
+
+    private int calculateTotalGeneralPriceSum(int totalGeneralPriceSum) {
+        for (OrderItem orderItem : orderItems) {
+            if (orderItem.isPromotionGiftQuantity()) {
+                Promotion promotion = getPromotion(orderItem.getName());
+                totalGeneralPriceSum += orderItem.calculateTotalGeneralPrice(promotion);
+                continue;
+            }
+            totalGeneralPriceSum += orderItem.getTotalPrice();
+        }
+        return totalGeneralPriceSum;
+    }
+
+    private int calculateTotalMembershipDiscount(int totalGeneralPriceSum) {
+        int membershipDiscount = (int) (totalGeneralPriceSum * 0.3);
+        if (!validateMembershipDiscountLimit(membershipDiscount)) {
+            membershipDiscount = 8000;
+        }
+        return membershipDiscount;
+    }
+
+    private boolean validateMembershipDiscountLimit(int membershipDiscount) {
+        return membershipDiscount <= 8000;
+    }
+
+    private String requestNtMembershipDiscount() {
+        outputView.printMembership();
+        return Task.reTryTaskUntilSuccessful(() -> inputAnswer());
+    }
+
+    private void initOrderItems(Cart cart) {
+        orderItems = new ArrayList<>();
+        itemStockChanges = new HashMap<>();
+
+        for (CartItem cartItem : cart.getCartItems()) {
+            // 프로모션 상품
+            if (isPromotion(cartItem)) {
+                handlePromotionItem(cartItem);
+                continue;
+            }
+
+            // 프로모션이 아닐때
+            // 일반 상품 재고량 구매 수량과 비교
+            handleGeneralItem(cartItem);
+        }
+
+        updateStock(itemStockChanges);
+    }
+
+    private void handleGeneralItem(CartItem cartItem) {
+        Validate.validateEnoughStock(storage, cartItem);
+        Item generalItem = storage.findGeneralItem(cartItem.getName());
+        orderItems.add(new OrderItem(cartItem.getName(), cartItem.getQuantity(), 0, generalItem.getPrice()));
+        itemStockChanges.put(generalItem, itemStockChanges.getOrDefault(generalItem, 0) + cartItem.getQuantity());
+    }
+
+    private boolean isPromotion(CartItem cartItem) {
+        if (!isPromotionItem(cartItem)) {
+            return false;
+        }
+
+        Promotion promotion = getPromotion(cartItem.getName());
+
+        return promotion.isCurrentPromotion(DateTimes.now());
+    }
+
+    private boolean isPromotionItem(CartItem cartItem) {
+        return storage.isPromotion(cartItem.getName());
+    }
+
+    private Promotion getPromotion(String itemName) {
+        Item promotionItem = storage.findPromotionItem(itemName);
+        String promotionDetail = promotionItem.getPromotionDetail();
+        return promotions.getPromotion(promotionDetail);
+    }
+
+    private void handlePromotionItem(CartItem cartItem) {
+        Item promotionItem = storage.findPromotionItem(cartItem.getName());
+
+        Promotion promotion = getPromotion(cartItem.getName());
+        int availableQuantity = promotionItem.availableQuantity(promotion.getTotalPromotionQuantity());
+
+        // 구매 수량보다 프로모션 재고량이 부족한 경우
+        if (isInsufficientPromotionStock(cartItem, availableQuantity)) {
+            int lowQuantity = cartItem.calculateLowQuantity(availableQuantity);  // ex) 10 - 6 = 4
+            handleInsufficientPromotionStock(cartItem, lowQuantity, promotion, promotionItem);
+            return;
+        }
+        // 프로모션 재고량이 충분한 경우
+        // 프로모션 적용이 가능한데 해당 수량보다 적게 사는 경우
+        if (promotion.isPromotionCondition(cartItem.getQuantity())) {
+            requestAdditionalGiftQuantity(cartItem, promotion);
+        }
+
+        applyPromotion(cartItem, promotionItem, promotion);
+    }
+
+    private boolean isInsufficientPromotionStock(CartItem cartItem, int availableQuantity) {
+        return availableQuantity < cartItem.getQuantity();
+    }
+
+    private void applyPromotion(CartItem cartItem, Item promotionItem, Promotion promotion) {
+        int giftQuantity = promotion.calculateGiftQuantity(cartItem.getQuantity());
+        orderItems.add(createOrderItem(cartItem, promotionItem, giftQuantity));
+        writeStockChange(itemStockChanges, promotionItem, cartItem.getQuantity());
+    }
+
+    private void requestAdditionalGiftQuantity(CartItem cartItem, Promotion promotion) {
+        outputView.printAdditionalGiftQuantity(cartItem.getName(), promotion.getGiftAmount());
+        if (Validate.isYesAnswer(inputAnswer())) {
+            cartItem.addGiftQuantity(promotion.getGiftAmount());
+        }
+    }
+
+    private void handleInsufficientPromotionStock(CartItem cartItem, int lowQuantity, Promotion promotion,
+                                                  Item promotionItem) {
+        // 부족한 재고는 일반 재고로 계산한다.
+        // 부족한 수량 = 장바구니 - 계산된 프로모션 가용가능한 재고량(7개가 있어도 2+1 행사라면 6개만 가용 가능)
+        String answer = requestChangeGeneralStock(cartItem, lowQuantity);
+
+        // 부족한 수량을 일반 재고로 계산
+        if (Validate.isYesAnswer(answer)) {
+            // 일반 재고량이 부족한 수량보다 같거나 많은지 검증
+            Validate.validateEnoughStock(storage, cartItem.getName(), lowQuantity);
+            changeGeneralStock(cartItem, orderItems, promotion, promotionItem, lowQuantity, itemStockChanges);
+        }
+
+        // 부족한 수량을 제외한다.(10-4 = 6)
+        if (Validate.isNoAnswer(answer)) {
+            adjustForLowQuantity(cartItem, lowQuantity, promotion, promotionItem);
+        }
+    }
+
+    private void adjustForLowQuantity(CartItem cartItem, int lowQuantity, Promotion promotion, Item promotionItem) {
+        int giftQuantity = promotion.calculateGiftQuantity(cartItem.calculateAvailableQuantity(lowQuantity));
+        cartItem.cancelItemQuantity(lowQuantity);
+        orderItems.add(createOrderItem(cartItem, promotionItem, giftQuantity));
+        writeStockChange(itemStockChanges, promotionItem, cartItem.calculateAvailableQuantity(lowQuantity));
+    }
+
+    private void writeStockChange(Map<Item, Integer> itemStockChanges, Item item, int DeductedQuantity) {
+        itemStockChanges.put(item, itemStockChanges.getOrDefault(item, 0) + DeductedQuantity);
+    }
+
+    private void changeGeneralStock(CartItem cartItem, List<OrderItem> orderItems, Promotion promotion,
+                                    Item promotionItem, int lowQuantity, Map<Item, Integer> itemStockChanges) {
+        Item generalItem = storage.findGeneralItem(cartItem.getName());
+        int giftQuantity = promotion.calculateGiftQuantity(cartItem.calculateAvailableQuantity(lowQuantity));
+        orderItems.add(createOrderItem(cartItem, promotionItem, giftQuantity));
+        writeStockChange(itemStockChanges, generalItem, lowQuantity);
+        writeStockChange(itemStockChanges, promotionItem, cartItem.calculateAvailableQuantity(lowQuantity));
+    }
+
+    private OrderItem createOrderItem(CartItem cartItem, Item promotionItem, int giftQuantity) {
+        return new OrderItem(cartItem.getName(), cartItem.getQuantity(), giftQuantity,
+                promotionItem.getPrice());
+    }
+
+    private String requestChangeGeneralStock(CartItem cartItem, int lowQuantity) {
+        outputView.printNotPromotionDiscount(cartItem.getName(), lowQuantity);
+        String answer = inputAnswer();
+        return answer;
     }
 
     private String inputAnswer() {
@@ -230,35 +297,46 @@ public class StoreController {
         return items;
     }
 
+    public void printReceipt(Order order) {
+        int maxItemNameLength = order.getMaxItemNameLength();
+        printReceiptHeader(maxItemNameLength);
+        printPurchaseItems(order, maxItemNameLength);
 
-    public static void printReceipt(Order order) {
-        int maxItemNameLength = order.getOrderItems().stream()
-                .mapToInt(item -> item.getName().length())
-                .max()
-                .orElse(1);
+        printGiftHeader();
+        printGiftItems(order, maxItemNameLength);
 
-        System.out.println("==============W 편의점================");
-        System.out.printf("%-" + maxItemNameLength + "s\t%10s\t%10s%n", "상품명", "수량", "금액");
+        printReceiptResult(order);
+    }
 
+    private void printReceiptResult(Order order) {
+        outputView.printResultLine();
+        outputView.printTotalPurchasePrice(order);
+        outputView.printTotalPromotionDiscount(order);
+        outputView.printTotalMembershipDiscount(order);
+        outputView.printActualPrice(order);
+    }
+
+    private void printGiftItems(Order order, int maxItemNameLength) {
         for (OrderItem orderItem : order.getOrderItems()) {
-            System.out.printf("%-" + maxItemNameLength + "s\t%10d\t%,10d%n", orderItem.getName(),
-                    orderItem.getPurchaseQuantity(), orderItem.getTotalPrice());
-        }
-
-        System.out.println("=============증    정===============");
-        for (OrderItem orderItem : order.getOrderItems()) {
-            if (orderItem.getPromotionGiftQuantity()) {
-                System.out.printf("%-" + maxItemNameLength + "s\t%10d%n", orderItem.getName(),
-                        orderItem.getPromotionQuantity());
+            if (orderItem.isPromotionGiftQuantity()) {
+                outputView.printGiftItemLine(maxItemNameLength, orderItem);
             }
         }
+    }
 
-        System.out.println("====================================");
-        System.out.printf("%-" + maxItemNameLength + "s\t%10d\t%,10d%n", "총구매액", order.getTotalOrderQuantity(),
-                order.getTotalOrderPrice());
-        System.out.printf("%-" + maxItemNameLength + "s\t\t\t\t%,10d%n", "행사할인",
-                -order.getTotalOrderPromotionDiscount());
-        System.out.printf("%-" + maxItemNameLength + "s\t\t\t\t%,10d%n", "멤버십할인", -order.getMembershipDisCount());
-        System.out.printf("%-" + maxItemNameLength + "s\t\t\t\t%,10d%n", "내실돈", order.getActualTotalPrice());
+    private void printGiftHeader() {
+        outputView.printGiftHeader();
+    }
+
+    private void printPurchaseItems(Order order, int maxItemNameLength) {
+        for (OrderItem orderItem : order.getOrderItems()) {
+            outputView.printPurchaseItemLine(maxItemNameLength, orderItem);
+        }
+    }
+
+    private void printReceiptHeader(int maxItemNameLength) {
+        outputView.printReceiptHeader();
+        outputView.printReceiptTag(maxItemNameLength, ITEM_NAME.getTitle(), ITEM_QUANTITY.getTitle(),
+                ITEM_PRICE.getTitle());
     }
 }
