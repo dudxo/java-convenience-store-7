@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import util.DependencyFactory;
+import util.Discount;
 import valid.Task;
 import valid.Validate;
 import view.InputView;
@@ -162,7 +163,8 @@ public class StoreController {
         // 부족한 수량을 일반 재고로 계산
         if (Validate.isYesAnswer(answer)) {
             // 일반 재고량이 부족한 수량보다 같거나 많은지 검증
-            Validate.validateEnoughStock(storage, cartItem.getName(), lowQuantity);
+            Validate.validateEnoughStock(storage, cartItem.getName(),
+                    cartItem.getQuantity() - promotionItem.getQuantity());
             changeGeneralStock(cartItem, orderItems, promotion, promotionItem, lowQuantity, itemStockChanges);
         }
 
@@ -255,15 +257,15 @@ public class StoreController {
     }
 
     private int calculateTotalMembershipDiscount(int totalGeneralPriceSum) {
-        int membershipDiscount = (int) (totalGeneralPriceSum * 0.3);
+        int membershipDiscount = (int) (totalGeneralPriceSum * Discount.DISCOUNT_RATE.getNumber());
         if (!validateMembershipDiscountLimit(membershipDiscount)) {
-            membershipDiscount = 8000;
+            membershipDiscount = (int) Discount.MAX_MEMBERSHIP_DISCOUNT.getNumber();
         }
         return membershipDiscount;
     }
 
     private boolean validateMembershipDiscountLimit(int membershipDiscount) {
-        return membershipDiscount <= 8000;
+        return membershipDiscount <= (int) Discount.MAX_MEMBERSHIP_DISCOUNT.getNumber();
     }
 
     private String requestNtMembershipDiscount() {
