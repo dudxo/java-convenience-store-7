@@ -27,6 +27,7 @@ import view.OutputView;
 
 public class StoreController {
 
+    private static final int ZERO_QUANTITY = 0, ZERO_PRICE = 0;
     private final InputView inputView;
     private final OutputView outputView;
     private Storage storage;
@@ -218,12 +219,14 @@ public class StoreController {
     private void handleGeneralItem(CartItem cartItem) {
         Validate.validateEnoughStock(storage, cartItem);
         Item generalItem = storage.findGeneralItem(cartItem.getName());
-        orderItems.add(new OrderItem(cartItem.getName(), cartItem.getQuantity(), 0, generalItem.getPrice()));
-        itemStockChanges.put(generalItem, itemStockChanges.getOrDefault(generalItem, 0) + cartItem.getQuantity());
+        orderItems.add(
+                new OrderItem(cartItem.getName(), cartItem.getQuantity(), ZERO_QUANTITY, generalItem.getPrice()));
+        itemStockChanges.put(generalItem,
+                itemStockChanges.getOrDefault(generalItem, ZERO_QUANTITY) + cartItem.getQuantity());
     }
 
     private void writeStockChange(Map<Item, Integer> itemStockChanges, Item item, int DeductedQuantity) {
-        itemStockChanges.put(item, itemStockChanges.getOrDefault(item, 0) + DeductedQuantity);
+        itemStockChanges.put(item, itemStockChanges.getOrDefault(item, ZERO_QUANTITY) + DeductedQuantity);
     }
 
     private void updateStock(Map<Item, Integer> itemStockChanges) {
@@ -235,7 +238,7 @@ public class StoreController {
     }
 
     public int calculateMembershipDiscount() {
-        int totalGeneralPriceSum = 0;
+        int totalGeneralPriceSum = ZERO_PRICE;
         if (Validate.isNoAnswer(requestNtMembershipDiscount())) {
             return totalGeneralPriceSum;
         }
