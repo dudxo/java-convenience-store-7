@@ -2,6 +2,7 @@ package file;
 
 import domain.Item;
 import domain.Promotion;
+import exception.ErrorMessage;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,8 +27,8 @@ public class FileLoader {
         List<T> entities = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(getInputStreamReader(filePath))) {
             getEntitiesForLine(parser, reader, entities);
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new IllegalArgumentException(ErrorMessage.NOT_READ_FILE.getMessage());
         }
         return entities;
     }
