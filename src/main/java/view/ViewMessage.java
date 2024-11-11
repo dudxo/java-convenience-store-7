@@ -11,7 +11,7 @@ public enum ViewMessage {
     OUTPUT_RECEIPT_HEADER("==============W 편의점================%n"),
     OUTPUT_RECEIPT_TAG("%%-%ds\t%%10s\t%%10s%n"),
 
-    OUTPUT_ITEM_LINE("%%-%ds\t%%10s\t%%10s%n"),
+    OUTPUT_ITEM_LINE("%%-%ds\t%%10s\t%%,10d%n"),
     OUTPUT_GIFT_HEADER("=============증    정================%n"),
     OUTPUT_GIFT_LINE("%%-%ds\t%10d%n"),
     OUTPUT_RESULT_LINE("====================================%n"),
@@ -35,8 +35,13 @@ public enum ViewMessage {
         System.out.printf(message, args);
     }
 
-    public void printItemLineWithDynamicFormat(int maxItemNameLength, Object... args) {
+    public void printReceiptTagWithDynamicFormat(int maxItemNameLength, Object... args) {
         String format = String.format("%%-%ds\t%%10s\t%%10s%n", maxItemNameLength);
+        System.out.printf(format, args);
+    }
+
+    public void printItemLineWithDynamicFormat(int maxItemNameLength, Object... args) {
+        String format = String.format("%%-%ds\t%%10s\t%%,10d%n", maxItemNameLength);
         System.out.printf(format, args);
     }
 

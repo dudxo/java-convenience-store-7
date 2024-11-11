@@ -62,7 +62,7 @@ public class OutputView {
     }
 
     public void printReceiptTag(int maxItemNameLength, String name, String quantity, String price) {
-        ViewMessage.OUTPUT_RECEIPT_TAG.printItemLineWithDynamicFormat(maxItemNameLength, name, quantity, price);
+        ViewMessage.OUTPUT_RECEIPT_TAG.printReceiptTagWithDynamicFormat(maxItemNameLength, name, quantity, price);
     }
 
     public void printResultLine() {
