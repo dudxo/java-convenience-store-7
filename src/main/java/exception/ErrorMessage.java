@@ -6,7 +6,8 @@ public enum ErrorMessage {
     NOT_FOUND_ITEM_MSG("존재하지 않는 상품입니다."),
     EXCEED_STOCK_MSG("재고 수량을 초과하여 구매할 수 없습니다."),
     INVALID_ANSWER_MSG("잘못된 입력입니다."),
-    MULTIPLE_PROMOTION_FOR_ITEM("한 상품에 여러 프로모션이 적용될 수 없습니다.");
+    MULTIPLE_PROMOTION_FOR_ITEM("한 상품에 여러 프로모션이 적용될 수 없습니다."),
+    NOT_READ_FILE("파일을 읽을 수 없습니다.");
 
     private static final String PREFIX_ERROR_MSG = "[ERROR] ";
     private static final String SUFFIX_ERROR_MSG = " 다시 입력해 주세요.";
