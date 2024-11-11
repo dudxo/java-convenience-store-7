@@ -16,8 +16,8 @@ public enum ViewMessage {
     OUTPUT_GIFT_LINE("%%-%ds\t%10d%n"),
     OUTPUT_RESULT_LINE("====================================%n"),
     OUTPUT_TOTAL_PURCHASE_PRICE_MSG("총구매액%10d\t%,10d%n"),
-    OUTPUT_EVENT_DISCOUNT("행사할인\t\t\t\t%,10d%n"),
-    OUTPUT_MEMBERSHIP_DISCOUNT("멤버십할인\t\t\t\t%,10d%n"),
+    OUTPUT_EVENT_DISCOUNT("행사할인\t\t\t%10s%,d%n"),
+    OUTPUT_MEMBERSHIP_DISCOUNT("멤버십할인\t\t\t%10s%,d%n"),
     OUTPUT_ACTUAL_PRICE("내실돈\t\t\t\t%,10d%n");
 
 

@@ -30,16 +30,17 @@ public class OutputView {
         ViewMessage.OUTPUT_ACTUAL_PRICE.print(order.getActualTotalPrice());
     }
 
-    public void printTotalMembershipDiscount(Order order) {
-        ViewMessage.OUTPUT_MEMBERSHIP_DISCOUNT.print(-order.getMembershipDisCount());
+    public void printTotalPurchasePrice(Order order) {
+        ViewMessage.OUTPUT_TOTAL_PURCHASE_PRICE_MSG.print(order.getTotalOrderQuantity(),
+                order.getTotalOrderPrice());
     }
 
     public void printTotalPromotionDiscount(Order order) {
-        ViewMessage.OUTPUT_EVENT_DISCOUNT.print(-order.getTotalOrderPromotionDiscount());
+        ViewMessage.OUTPUT_EVENT_DISCOUNT.print("-", order.getTotalOrderPromotionDiscount());
     }
 
-    public void printTotalPurchasePrice(Order order) {
-        ViewMessage.OUTPUT_TOTAL_PURCHASE_PRICE_MSG.print(order.getTotalOrderQuantity(), order.getTotalOrderPrice());
+    public void printTotalMembershipDiscount(Order order) {
+        ViewMessage.OUTPUT_MEMBERSHIP_DISCOUNT.print("-", order.getMembershipDisCount());
     }
 
     public void printGiftItemLine(int maxItemNameLength, OrderItem orderItem) {
