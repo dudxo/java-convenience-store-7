@@ -3,6 +3,7 @@ package valid;
 import domain.CartItem;
 import domain.Storage;
 import exception.ErrorMessage;
+import java.util.Map;
 
 public class Validate {
 
@@ -56,5 +57,13 @@ public class Validate {
             return;
         }
         throw new IllegalArgumentException(ErrorMessage.EXCEED_STOCK_MSG.getMessage());
+    }
+
+    public static void validateMultiplePromotion(Map<String, Long> promotionCountForItem) {
+        promotionCountForItem.forEach((name, count) -> {
+            if (count > 1) {
+                throw new IllegalArgumentException(ErrorMessage.MULTIPLE_PROMOTION_FOR_ITEM.getMessage());
+            }
+        });
     }
 }
