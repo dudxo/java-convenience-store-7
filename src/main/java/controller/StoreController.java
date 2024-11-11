@@ -162,7 +162,7 @@ public class StoreController {
 
     private String requestNtMembershipDiscount() {
         outputView.printMembership();
-        return Task.reTryTaskUntilSuccessful(() -> inputAnswer());
+        return inputAnswer();
     }
 
     private void initOrderItems(Cart cart) {
