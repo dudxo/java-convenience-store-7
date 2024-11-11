@@ -290,13 +290,17 @@ public class StoreController {
     }
 
     private Storage initStorage() {
-        List<Item> items = FileLoader.loadProductsFromFile();
-        return new Storage(items);
+        return Task.reTryTaskUntilSuccessful(() -> {
+            List<Item> items = FileLoader.loadProductsFromFile();
+            return new Storage(items);
+        });
     }
 
     private Promotions initPromotions() {
-        List<Promotion> promotions = FileLoader.loadPromotionsFromFile();
-        return new Promotions(promotions);
+        return Task.reTryTaskUntilSuccessful(() -> {
+            List<Promotion> promotions = FileLoader.loadPromotionsFromFile();
+            return new Promotions(promotions);
+        });
     }
 
     private String[] inputItem() {
