@@ -1,13 +1,28 @@
 package domain;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import valid.Validate;
 
 public class Storage {
 
     private final List<Item> items;
 
     public Storage(List<Item> items) {
+        validateItems(items);
         this.items = items;
+    }
+
+    private void validateItems(List<Item> items) {
+        Map<String, Long> promotionCountForItem = getPromotionCountForItem(items);
+        Validate.validateMultiplePromotion(promotionCountForItem);
+    }
+
+    private Map<String, Long> getPromotionCountForItem(List<Item> items) {
+        return items.stream()
+                .filter(Item::isPromotionItem)
+                .collect(Collectors.groupingBy(Item::getName, Collectors.counting()));
     }
 
     @Override
